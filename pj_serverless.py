@@ -3,7 +3,6 @@ import pjsua2 as pj
 
 active_calls = {}
 
-
 class MyAccount(pj.Account):
     def onIncomingCall(self, prm):
         call = pj.Call(self, prm.callId)
@@ -37,6 +36,8 @@ ep.libCreate()
 
 ep_cfg = pj.EpConfig()
 ep.libInit(ep_cfg)
+
+ep.audDevManager().setNullDev()
 
 # Transport for Alice (UDP 5060)
 alice_cfg = pj.TransportConfig()
