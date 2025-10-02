@@ -1,7 +1,8 @@
 import pjsua2 as pj
 import my_call
-
+active_calls = {}
 class Account(pj.Account):
+
     def __init__(self, sip_uri):
         pj.Account.__init__(self)
         self.cfg = pj.AccountConfig()
@@ -11,6 +12,7 @@ class Account(pj.Account):
     def onIncomingCall(self, prm):
         call = pj.Call(self, prm.callId)
         call_info = call.getInfo()
+        active_calls[prm.callId] = call
         print(f"Incoming call from {call_info.remoteUri}")
         #print(f"Will wait for media transport before answering")
         print(f"Accepting Automatically")
@@ -20,7 +22,7 @@ class Account(pj.Account):
         call.answer(call_prm)
         
     def call(self, target_uri):
-        call = my_call.Call(self, peer_uri=target_uri)
+        call = my_call.Call(self)
         call_param = pj.CallOpParam()
         call.makeCall(target_uri, call_param)
         return call

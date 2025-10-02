@@ -4,12 +4,15 @@ import my_account
 import my_call
 import time
 
+
 #set up endpoint
 ep = my_endpoint.Endpoint()
 ep.libCreate()
 
 ep_cfg = pj.EpConfig()
 ep.libInit(ep_cfg)
+
+ep.audDevManager().setNullDev()
 
 #set up transport for accounts
 # Transport for Alice (UDP 5060)
