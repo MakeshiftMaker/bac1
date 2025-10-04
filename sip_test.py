@@ -46,7 +46,12 @@ time.sleep(1)
 bob_info = bob.getInfo()
 bob_call_alice = bob.call(alice.cfg.idUri)
 
-import time
+time.sleep(5)
+
+#bob_call_alice.hangup()
+alice.hangup_all()
+print("hanging up")
+
 try:
     while True:
         time.sleep(1)
