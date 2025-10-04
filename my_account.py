@@ -33,11 +33,27 @@ class Account(pj.Account): # Account dervitive
         
     def call(self, target_uri): # Make a call
         call = my_call.Call(self)
-        call_param = pj.CallOpParam()
+        call_param = pj.CallOpParam(True)
         call.makeCall(target_uri, call_param)
+        
+        call_id = call.getId()
+        self.active_calls[call_id] = call
+        
         return call
     
     def hangup_all(self):
         for call in list(self.active_calls.values()):
             call.hangup()
-    
+
+    def hangup_one(self, call_id):
+        call = self.active_calls.get(call_id)
+        if call:
+            call.hangup()
+            # Remove from active calls after hangup
+            del self.active_calls[call_id]
+            print(f"Call {call_id} hung up.")
+        else:
+            print(f"No active call with id={call_id}")
+
+    def get_active_calls(self):
+        return self.active_calls
