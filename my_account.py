@@ -21,25 +21,17 @@ class Account(pj.Account): # Account dervitive
         call_prm.statusCode = pj.PJSIP_SC_OK
         call.answer(call_prm)
         
-    def onCallState(self, prm): # callback for call-state changes, for example hanging up
-        ci = self.getInfo()
-        print(f"[Call] State changed: {ci.stateText} ({ci.lastStatusCode})")
-
-        # If call is disconnected, remove it from account’s active_calls
-        if ci.state == pj.PJSIP_INV_STATE_DISCONNECTED:
-            if self.acc and ci.id in self.acc.active_calls:
-                print(f"[Call] Removing call {ci.id} from active_calls")
-                del self.acc.active_calls[ci.id] # watch if the call disconnects and remove it out of the call dict
-        
-    def call(self, target_uri): # Make a call
+    def call(self, target_uri):
         call = my_call.Call(self)
         call_param = pj.CallOpParam(True)
-        call.makeCall(target_uri, call_param)
-        
-        call_id = call.getId()
-        self.active_calls[call_id] = call
-        
-        return call
+        try:
+            call.makeCall(target_uri, call_param)
+            self.active_calls[call.getId()] = call
+            return call
+        except pj.Error as e:
+            print(f"[Account] Failed to make call to {target_uri}")
+            print(f"  message={e.title}: {e.info}")
+            raise
     
     def hangup_all(self):
         for call in list(self.active_calls.values()):
@@ -49,8 +41,6 @@ class Account(pj.Account): # Account dervitive
         call = self.active_calls.get(call_id)
         if call:
             call.hangup()
-            # Remove from active calls after hangup
-            del self.active_calls[call_id]
             print(f"Call {call_id} hung up.")
         else:
             print(f"No active call with id={call_id}")
