@@ -1,0 +1,114 @@
+<!-- ui.html - minimal Web UI to control the backend demo -->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>PJSIP Demo Control</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, Arial;
+        max-width: 880px;
+        margin: 20px;
+      }
+      input,
+      button {
+        padding: 8px;
+        margin: 6px 0;
+      }
+      #events {
+        background: #f6f7fb;
+        padding: 10px;
+        min-height: 200px;
+        border-radius: 6px;
+        overflow: auto;
+      }
+      .event {
+        font-family: monospace;
+        margin-bottom: 6px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>PJSIP Demo — Control Panel</h1>
+
+    <div>
+      <label>
+        Local account name:
+        <input id="username" placeholder="alice" value="alice" />
+      </label>
+      <label>
+        Target SIP URI/IP:
+        <input
+          id="target"
+          placeholder="sip:bob@127.0.0.1"
+          value="sip:bob@127.0.0.1"
+        />
+      </label>
+      <br />
+      <button id="createAccount">Create Local Account</button>
+      <button id="callBtn">Call</button>
+      <button id="hangupBtn">Hangup</button>
+      <button id="listBtn">List Calls</button>
+    </div>
+
+    <h3>Events</h3>
+    <div id="events"></div>
+
+    <script>
+      const ws = new WebSocket("ws://" + location.hostname + ":8000/ws");
+      const events = document.getElementById("events");
+      const usernameInput = document.getElementById("username");
+      const targetInput = document.getElementById("target");
+
+      function log(obj) {
+        const d = document.createElement("div");
+        d.className = "event";
+        d.textContent =
+          new Date().toLocaleTimeString() + " - " + JSON.stringify(obj);
+        events.prepend(d);
+      }
+
+      ws.addEventListener("open", () => log({ connected: true }));
+      ws.addEventListener("message", (ev) => {
+        try {
+          const data = JSON.parse(ev.data);
+          log(data);
+        } catch (e) {
+          log({ raw: ev.data });
+        }
+      });
+
+      document
+        .getElementById("createAccount")
+        .addEventListener("click", () => {
+          const username = usernameInput.value.trim();
+          if (!username) return alert("Please fill username");
+          ws.send(
+            JSON.stringify({
+              action: "create_account",
+              uri: `sip:${username}@127.0.0.1`,
+            })
+          );
+        });
+
+      document.getElementById("callBtn").addEventListener("click", () => {
+        const username = usernameInput.value.trim();
+        const target = targetInput.value.trim();
+        if (!username || !target)
+          return alert("Please fill username & target");
+        ws.send(
+          JSON.stringify({ action: "call", from: `sip:${username}@127.0.0.1`, target })
+        );
+      });
+
+      document.getElementById("hangupBtn").addEventListener("click", () => {
+        ws.send(JSON.stringify({ action: "hangup_all" }));
+      });
+
+      document.getElementById("listBtn").addEventListener("click", () => {
+        ws.send(JSON.stringify({ action: "list_calls" }));
+      });
+    </script>
+  </body>
+</html>
